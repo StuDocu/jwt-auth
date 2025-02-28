@@ -2,7 +2,6 @@ name: PHPUnit tests
 
 on:
   push:
-  pull_request:
   release:
     types:
       - published
@@ -15,14 +14,16 @@ jobs:
       fail-fast: false
       matrix:
         php: [8.0, 8.1, 8.2, 8.3, 8.4]
-        laravel: [9.*, 10.*, 11.*]
+        laravel: [9.*, 10.*, 11.*, 12.*]
         os: [ubuntu-latest]
         coverage: [none]
+        stability: [prefer-lowest, prefer-stable]
         include:
-          - php: 8.3
-            laravel: 11.*
+          - php: 8.4
+            laravel: 12.*
             os: ubuntu-latest
             coverage: xdebug
+            stability: prefer-stable
         exclude:
           - php: 8.0
             laravel: 10.*
@@ -30,8 +31,12 @@ jobs:
             laravel: 11.*
           - php: 8.1
             laravel: 11.*
+          - php: 8.0
+            laravel: 12.*
+          - php: 8.1
+            laravel: 12.*
 
-    name: '[P${{ matrix.php }}] [L${{ matrix.laravel }}] [${{ matrix.coverage }}]'
+    name: PHP${{ matrix.php }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout code
@@ -53,13 +58,13 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: "php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ hashFiles('**/composer.json') }}"
-          restore-keys: "php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ hashFiles('**/composer.json') }}"
+          key: "php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ matrix.stability }}-${{ hashFiles('**/composer.json') }}"
+          restore-keys: "php-${{ matrix.php }}-laravel-${{ matrix.laravel }}-${{ matrix.stability }}-${{ hashFiles('**/composer.json') }}"
 
       - name: Install dependencies
         run: |
           composer require "illuminate/contracts:${{ matrix.laravel }}" --no-interaction --no-progress --no-update
-          composer update --no-progress --prefer-dist --no-interaction
+          composer update --${{ matrix.stability }} --no-progress --prefer-dist --no-interaction
 
       - name: Execute tests
         run: composer test:ci
