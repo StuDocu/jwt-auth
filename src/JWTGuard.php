@@ -49,6 +49,18 @@ class JWTGuard implements Guard
     protected $request;
 
     /**
+     * The user id.
+     *
+     * @var int|null
+     */
+    protected $id;
+
+    /**
+     * @var bool|null
+     */
+    protected $userNotFound;
+
+    /**
      * Instantiate the class.
      *
      * @param  \Tymon\JWTAuth\JWT  $jwt
@@ -74,12 +86,44 @@ class JWTGuard implements Guard
             return $this->user;
         }
 
+        if (! $this->id()) {
+            return null;
+        }
+
+        return $this->user = $this->provider->retrieveById($this->id());
+    }
+
+    /**
+     * Get the currently authenticated user ID without going to the database.
+     *
+     * @return int|null
+     */
+    public function id()
+    {
+        if ($this->user !== null) {
+            return $this->id = $this->user->getAuthIdentifier();
+        }
+
+        if ($this->id !== null) {
+            return $this->id;
+        }
+
+        if ($this->userNotFound === true) {
+            // If the user was not found, we will not check again.
+            return null;
+        }
+
         if ($this->jwt->setRequest($this->request)->getToken() &&
             ($payload = $this->jwt->check(true)) &&
-            $this->validateSubject()
-        ) {
-            return $this->user = $this->provider->retrieveById($payload['sub']);
+            $this->validateSubject())
+        {
+            $this->id = $payload['sub'];
+            return $this->id;
         }
+
+        $this->userNotFound = true;
+
+        return null;
     }
 
     /**
