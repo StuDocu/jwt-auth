@@ -90,37 +90,21 @@ class JWT
     /**
      * Refresh an expired token.
      *
-     * @param  bool  $forceForever
      * @param  bool  $resetClaims
      * @return string
      */
-    public function refresh($forceForever = false, $resetClaims = false)
+    public function refresh($resetClaims = false)
     {
         $this->requireToken();
 
         return $this->manager->customClaims($this->getCustomClaims())
-                             ->refresh($this->token, $forceForever, $resetClaims)
+                             ->refresh($this->token, $resetClaims)
                              ->get();
     }
 
     /**
-     * Invalidate a token (add it to the blacklist).
-     *
-     * @param  bool  $forceForever
-     * @return $this
-     */
-    public function invalidate($forceForever = false)
-    {
-        $this->requireToken();
-
-        $this->manager->invalidate($this->token, $forceForever);
-
-        return $this;
-    }
-
-    /**
      * Alias to get the payload, and as a result checks that
-     * the token is valid i.e. not expired or blacklisted.
+     * the token is valid i.e. not expired.
      *
      * @return \Tymon\JWTAuth\Payload
      *
@@ -373,16 +357,6 @@ class JWT
     public function factory()
     {
         return $this->manager->getPayloadFactory();
-    }
-
-    /**
-     * Get the Blacklist.
-     *
-     * @return \Tymon\JWTAuth\Blacklist
-     */
-    public function blacklist()
-    {
-        return $this->manager->getBlacklist();
     }
 
     /**

@@ -257,18 +257,6 @@ class JWTGuardTest extends AbstractTestCase
     }
 
     /** @test */
-    public function it_should_logout_the_user_by_invalidating_the_token()
-    {
-        $this->jwt->shouldReceive('setRequest')->andReturn($this->jwt);
-        $this->jwt->shouldReceive('getToken')->once()->andReturn(true);
-        $this->jwt->shouldReceive('invalidate')->once()->andReturn(true);
-        $this->jwt->shouldReceive('unsetToken')->once();
-
-        $this->guard->logout();
-        $this->assertNull($this->guard->getUser());
-    }
-
-    /** @test */
     public function it_should_refresh_the_token()
     {
         $this->jwt->shouldReceive('setRequest')->andReturn($this->jwt);
@@ -276,16 +264,6 @@ class JWTGuardTest extends AbstractTestCase
         $this->jwt->shouldReceive('refresh')->once()->andReturn('foo.bar.baz');
 
         $this->assertSame($this->guard->refresh(), 'foo.bar.baz');
-    }
-
-    /** @test */
-    public function it_should_invalidate_the_token()
-    {
-        $this->jwt->shouldReceive('setRequest')->andReturn($this->jwt);
-        $this->jwt->shouldReceive('getToken')->once()->andReturn(true);
-        $this->jwt->shouldReceive('invalidate')->once()->andReturn(true);
-
-        $this->assertTrue($this->guard->invalidate());
     }
 
     /** @test */
