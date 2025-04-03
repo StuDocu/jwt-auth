@@ -1,5 +1,6 @@
 /vendor
+/build
+/.idea
 composer.lock
-build
 coverage.xml
 .phpunit.result.cache
