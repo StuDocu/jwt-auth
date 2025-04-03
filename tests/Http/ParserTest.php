@@ -13,15 +13,11 @@ namespace Tymon\JWTAuth\Test\Http;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use Illuminate\Support\Facades\Crypt;
 use Mockery;
 use Tymon\JWTAuth\Contracts\Http\Parser as ParserContract;
 use Tymon\JWTAuth\Http\Parser\AuthHeaders;
 use Tymon\JWTAuth\Http\Parser\Cookies;
-use Tymon\JWTAuth\Http\Parser\InputSource;
-use Tymon\JWTAuth\Http\Parser\LumenRouteParams;
 use Tymon\JWTAuth\Http\Parser\Parser;
-use Tymon\JWTAuth\Http\Parser\QueryString;
 use Tymon\JWTAuth\Http\Parser\RouteParams;
 use Tymon\JWTAuth\Test\AbstractTestCase;
 
@@ -36,10 +32,7 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
 
         $parser->setChain([
-            new QueryString,
-            new InputSource,
             new AuthHeaders,
-            new RouteParams,
         ]);
 
         $this->assertSame($parser->parseToken(), 'foobar');
@@ -55,10 +48,8 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
 
         $parser->setChain([
-            new QueryString,
-            new InputSource,
             (new AuthHeaders)->setHeaderPrefix('Custom'),
-            new RouteParams,
+
         ]);
 
         $this->assertSame($parser->parseToken(), 'foobar');
@@ -74,10 +65,8 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
 
         $parser->setChain([
-            new QueryString,
-            new InputSource,
             (new AuthHeaders)->setHeaderName('custom_authorization'),
-            new RouteParams,
+
         ]);
 
         $this->assertSame($parser->parseToken(), 'foobar');
@@ -95,9 +84,6 @@ class ParserTest extends AbstractTestCase
 
         $parser = new Parser($request1, [
             new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
         ]);
 
         $this->assertSame($parser->parseToken(), 'foobar');
@@ -117,10 +103,7 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
 
         $parser->setChain([
-            new QueryString,
-            new InputSource,
             new AuthHeaders,
-            new RouteParams,
         ]);
 
         $this->assertNull($parser->parseToken());
@@ -136,10 +119,7 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
 
         $parser->setChain([
-            new QueryString,
-            new InputSource,
             new AuthHeaders,
-            new RouteParams,
         ]);
 
         $this->assertSame($parser->parseToken(), 'foobar--');
@@ -159,10 +139,7 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
 
         $parser->setChain([
-            new QueryString,
-            new InputSource,
             new AuthHeaders,
-            new RouteParams,
         ]);
 
         $this->assertSame($parser->parseToken(), 'foobar');
@@ -185,256 +162,6 @@ class ParserTest extends AbstractTestCase
     }
 
     /** @test */
-    public function it_should_return_the_token_from_query_string()
-    {
-        $request = Request::create('foo', 'GET', ['token' => 'foobar']);
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_the_custom_query_string()
-    {
-        $request = Request::create('foo', 'GET', ['custom_token_key' => 'foobar']);
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            (new QueryString)->setKey('custom_token_key'),
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_the_query_string_not_the_input_source()
-    {
-        $request = Request::create('foo?token=foobar', 'POST', [], [], [], [], json_encode(['token' => 'foobarbaz']));
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_the_custom_query_string_not_the_custom_input_source()
-    {
-        $request = Request::create('foo?custom_token_key=foobar', 'POST', [], [], [], [], json_encode(['custom_token_key' => 'foobarbaz']));
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            (new QueryString)->setKey('custom_token_key'),
-            (new InputSource)->setKey('custom_token_key'),
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_input_source()
-    {
-        $request = Request::create('foo', 'POST', [], [], [], [], json_encode(['token' => 'foobar']));
-        $request->headers->set('Content-Type', 'application/json');
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_the_custom_input_source()
-    {
-        $request = Request::create('foo', 'POST', [], [], [], [], json_encode(['custom_token_key' => 'foobar']));
-        $request->headers->set('Content-Type', 'application/json');
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            (new InputSource)->setKey('custom_token_key'),
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_an_unencrypted_cookie()
-    {
-        $request = Request::create('foo', 'POST', [], ['token' => 'foobar']);
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-            new Cookies(false),
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_a_crypted_cookie()
-    {
-        Crypt::shouldReceive('encrypt')
-            ->with('foobar')
-            ->once()
-            ->andReturn('cryptedFoobar');
-
-        $request = Request::create('foo', 'POST', [], ['token' => Crypt::encrypt('foobar')]);
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-            new Cookies(true),
-        ]);
-
-        Crypt::shouldReceive('decrypt')
-            ->with('cryptedFoobar')
-            ->times(2)
-            ->andReturn('foobar');
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_route()
-    {
-        $request = Request::create('foo', 'GET', ['foo' => 'bar']);
-        $request->setRouteResolver(function () {
-            return $this->getRouteMock('foobar');
-        });
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_return_the_token_from_route_with_a_custom_param()
-    {
-        $request = Request::create('foo', 'GET', ['foo' => 'bar']);
-        $request->setRouteResolver(function () {
-            return $this->getRouteMock('foobar', 'custom_route_param');
-        });
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            (new RouteParams)->setKey('custom_route_param'),
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foobar');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_ignore_routeless_requests()
-    {
-        $request = Request::create('foo', 'GET', ['foo' => 'bar']);
-        $request->setRouteResolver(function () {
-            //
-        });
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertNull($parser->parseToken());
-        $this->assertFalse($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_ignore_lumen_request_arrays()
-    {
-        $request = Request::create('foo', 'GET', ['foo' => 'bar']);
-        $request->setRouteResolver(function () {
-            return [false, ['uses' => 'someController'], ['token' => 'foobar']];
-        });
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
-        ]);
-
-        $this->assertNull($parser->parseToken());
-        $this->assertFalse($parser->hasToken());
-    }
-
-    /** @test */
-    public function it_should_accept_lumen_request_arrays_with_special_class()
-    {
-        $request = Request::create('foo', 'GET', ['foo' => 'bar']);
-        $request->setRouteResolver(function () {
-            return [false, ['uses' => 'someController'], ['token' => 'foo.bar.baz']];
-        });
-
-        $parser = new Parser($request);
-        $parser->setChain([
-            new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new LumenRouteParams,
-        ]);
-
-        $this->assertSame($parser->parseToken(), 'foo.bar.baz');
-        $this->assertTrue($parser->hasToken());
-    }
-
-    /** @test */
     public function it_should_return_null_if_no_token_in_request()
     {
         $request = Request::create('foo', 'GET', ['foo' => 'bar']);
@@ -445,9 +172,6 @@ class ParserTest extends AbstractTestCase
         $parser = new Parser($request);
         $parser->setChain([
             new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
         ]);
 
         $this->assertNull($parser->parseToken());
@@ -459,9 +183,6 @@ class ParserTest extends AbstractTestCase
     {
         $chain = [
             new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
         ];
 
         $parser = new Parser(Mockery::mock(Request::class));
@@ -475,9 +196,6 @@ class ParserTest extends AbstractTestCase
     {
         $chain = [
             new AuthHeaders,
-            new QueryString,
-            new InputSource,
-            new RouteParams,
         ];
 
         /* @var \Illuminate\Http\Request $request */
@@ -487,13 +205,6 @@ class ParserTest extends AbstractTestCase
         $parser->setChainOrder($chain);
 
         $this->assertSame($parser->getChain(), $chain);
-    }
-
-    /** @test */
-    public function it_should_set_the_cookie_key()
-    {
-        $cookies = (new Cookies)->setKey('test');
-        $this->assertInstanceOf(Cookies::class, $cookies);
     }
 
     /** @test */
