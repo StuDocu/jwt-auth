@@ -65,4 +65,14 @@ class Illuminate implements Auth
     {
         return $this->auth->user();
     }
+
+    /**
+     * Get the ID of the currently authenticated user.
+     *
+     * @return mixed
+     */
+    public function id()
+    {
+        return $this->auth->id();
+    }
 }
