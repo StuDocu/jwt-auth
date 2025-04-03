@@ -66,9 +66,6 @@ Log the user out - which will invalidate the current token and unset the authent
 
 ```php
 auth()->logout();
-
-// Pass true to force the token to be blacklisted "forever"
-auth()->logout(true);
 ```
 
 ### refresh()
@@ -78,20 +75,8 @@ Refresh a token, which invalidates the current one
 ```php
 $newToken = auth()->refresh();
 
-// Pass true as the first param to force the token to be blacklisted "forever".
-// The second parameter will reset the claims for the new token
-$newToken = auth()->refresh(true, true);
-```
-
-### invalidate()
-
-Invalidate the token (add it to the blacklist)
-
-```php
-auth()->invalidate();
-
-// Pass true as the first param to force the token to be blacklisted "forever".
-auth()->invalidate(true);
+// Pass true as the first param to reset the claims for the new token
+$newToken = auth()->refresh(true);
 ```
 
 ### tokenById()

@@ -205,26 +205,6 @@ class JWTAuthTest extends AbstractTestCase
     }
 
     /** @test */
-    public function it_should_invalidate_a_token()
-    {
-        $token = new Token('foo.bar.baz');
-
-        $this->manager->shouldReceive('invalidate')->once()->with($token, false)->andReturn(true);
-
-        $this->jwtAuth->setToken($token)->invalidate();
-    }
-
-    /** @test */
-    public function it_should_force_invalidate_a_token_forever()
-    {
-        $token = new Token('foo.bar.baz');
-
-        $this->manager->shouldReceive('invalidate')->once()->with($token, true)->andReturn(true);
-
-        $this->jwtAuth->setToken($token)->invalidate(true);
-    }
-
-    /** @test */
     public function it_should_retrieve_the_token_from_the_request()
     {
         $this->parser->shouldReceive('parseToken')->andReturn('foo.bar.baz');
@@ -277,16 +257,6 @@ class JWTAuthTest extends AbstractTestCase
         $this->parser->shouldReceive('parseToken')->andReturn(false);
 
         $this->assertNull($this->jwtAuth->getToken());
-    }
-
-    /** @test */
-    public function it_should_magically_call_the_manager()
-    {
-        $this->manager->shouldReceive('getBlacklist')->andReturn(new stdClass);
-
-        $blacklist = $this->jwtAuth->manager()->getBlacklist();
-
-        $this->assertInstanceOf(stdClass::class, $blacklist);
     }
 
     /** @test */

@@ -35,4 +35,11 @@ interface Auth
      * @return mixed
      */
     public function user();
+
+    /**
+     * Get the ID of the currently authenticated user.
+     *
+     * @return mixed
+     */
+    public function id();
 }

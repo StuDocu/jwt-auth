@@ -13,12 +13,10 @@ namespace Tymon\JWTAuth\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Namshi\JOSE\JWS;
-use Tymon\JWTAuth\Blacklist;
 use Tymon\JWTAuth\Claims\Factory as ClaimFactory;
 use Tymon\JWTAuth\Console\JWTGenerateSecretCommand;
 use Tymon\JWTAuth\Contracts\Providers\Auth;
 use Tymon\JWTAuth\Contracts\Providers\JWT as JWTContract;
-use Tymon\JWTAuth\Contracts\Providers\Storage;
 use Tymon\JWTAuth\Factory;
 use Tymon\JWTAuth\Http\Middleware\Authenticate;
 use Tymon\JWTAuth\Http\Middleware\AuthenticateAndRenew;
@@ -68,8 +66,6 @@ abstract class AbstractServiceProvider extends ServiceProvider
 
         $this->registerJWTProvider();
         $this->registerAuthProvider();
-        $this->registerStorageProvider();
-        $this->registerJWTBlacklist();
 
         $this->registerManager();
         $this->registerTokenParser();
@@ -117,9 +113,7 @@ abstract class AbstractServiceProvider extends ServiceProvider
         $this->app->alias('tymon.jwt.provider.jwt.namshi', Namshi::class);
         $this->app->alias('tymon.jwt.provider.jwt.lcobucci', Lcobucci::class);
         $this->app->alias('tymon.jwt.provider.auth', Auth::class);
-        $this->app->alias('tymon.jwt.provider.storage', Storage::class);
         $this->app->alias('tymon.jwt.manager', Manager::class);
-        $this->app->alias('tymon.jwt.blacklist', Blacklist::class);
         $this->app->alias('tymon.jwt.payload.factory', Factory::class);
         $this->app->alias('tymon.jwt.validators.payload', PayloadValidator::class);
     }
@@ -185,18 +179,6 @@ abstract class AbstractServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register the bindings for the Storage provider.
-     *
-     * @return void
-     */
-    protected function registerStorageProvider()
-    {
-        $this->app->singleton('tymon.jwt.provider.storage', function () {
-            return $this->getConfigInstance('providers.storage');
-        });
-    }
-
-    /**
      * Register the bindings for the JWT Manager.
      *
      * @return void
@@ -206,12 +188,10 @@ abstract class AbstractServiceProvider extends ServiceProvider
         $this->app->singleton('tymon.jwt.manager', function ($app) {
             $instance = new Manager(
                 $app['tymon.jwt.provider.jwt'],
-                $app['tymon.jwt.blacklist'],
                 $app['tymon.jwt.payload.factory']
             );
 
-            return $instance->setBlacklistEnabled((bool) $this->config('blacklist_enabled'))
-                            ->setPersistentClaims($this->config('persistent_claims'));
+            return $instance->setPersistentClaims($this->config('persistent_claims'));
         });
     }
 
@@ -266,21 +246,6 @@ abstract class AbstractServiceProvider extends ServiceProvider
                 $app['tymon.jwt.provider.auth'],
                 $app['tymon.jwt.parser']
             ))->lockSubject($this->config('lock_subject'));
-        });
-    }
-
-    /**
-     * Register the bindings for the Blacklist.
-     *
-     * @return void
-     */
-    protected function registerJWTBlacklist()
-    {
-        $this->app->singleton('tymon.jwt.blacklist', function ($app) {
-            $instance = new Blacklist($app['tymon.jwt.provider.storage']);
-
-            return $instance->setGracePeriod($this->config('blacklist_grace_period'))
-                            ->setRefreshTTL($this->config('refresh_ttl'));
         });
     }
 

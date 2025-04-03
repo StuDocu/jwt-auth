@@ -209,33 +209,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Blacklist Enabled
-    |--------------------------------------------------------------------------
-    |
-    | In order to invalidate tokens, you must have the blacklist enabled.
-    | If you do not want or need this functionality, then set this to false.
-    |
-    */
-
-    'blacklist_enabled' => env('JWT_BLACKLIST_ENABLED', true),
-
-    /*
-    | -------------------------------------------------------------------------
-    | Blacklist Grace Period
-    | -------------------------------------------------------------------------
-    |
-    | When multiple concurrent requests are made with the same JWT,
-    | it is possible that some of them fail, due to token regeneration
-    | on every request.
-    |
-    | Set grace period in seconds to prevent parallel request failure.
-    |
-    */
-
-    'blacklist_grace_period' => env('JWT_BLACKLIST_GRACE_PERIOD', 0),
-
-    /*
-    |--------------------------------------------------------------------------
     | Cookies encryption
     |--------------------------------------------------------------------------
     |
@@ -284,17 +257,6 @@ return [
         */
 
         'auth' => Tymon\JWTAuth\Providers\Auth\Illuminate::class,
-
-        /*
-        |--------------------------------------------------------------------------
-        | Storage Provider
-        |--------------------------------------------------------------------------
-        |
-        | Specify the provider that is used to store tokens in the blacklist.
-        |
-        */
-
-        'storage' => Tymon\JWTAuth\Providers\Storage\Illuminate::class,
 
     ],
 

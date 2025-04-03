@@ -49,6 +49,18 @@ class JWTGuard implements Guard
     protected $request;
 
     /**
+     * The user id.
+     *
+     * @var int|null
+     */
+    protected $id;
+
+    /**
+     * @var bool|null
+     */
+    protected $userNotFound;
+
+    /**
      * Instantiate the class.
      *
      * @param  \Tymon\JWTAuth\JWT  $jwt
@@ -74,12 +86,44 @@ class JWTGuard implements Guard
             return $this->user;
         }
 
+        if (! $this->id()) {
+            return null;
+        }
+
+        return $this->user = $this->provider->retrieveById($this->id());
+    }
+
+    /**
+     * Get the currently authenticated user ID without going to the database.
+     *
+     * @return int|null
+     */
+    public function id()
+    {
+        if ($this->user !== null) {
+            return $this->id = $this->user->getAuthIdentifier();
+        }
+
+        if ($this->id !== null) {
+            return $this->id;
+        }
+
+        if ($this->userNotFound === true) {
+            // If the user was not found, we will not check again.
+            return null;
+        }
+
         if ($this->jwt->setRequest($this->request)->getToken() &&
             ($payload = $this->jwt->check(true)) &&
-            $this->validateSubject()
-        ) {
-            return $this->user = $this->provider->retrieveById($payload['sub']);
+            $this->validateSubject())
+        {
+            $this->id = $payload['sub'];
+            return $this->id;
         }
+
+        $this->userNotFound = true;
+
+        return null;
     }
 
     /**
@@ -142,15 +186,12 @@ class JWTGuard implements Guard
     }
 
     /**
-     * Logout the user, thus invalidating the token.
+     * Logout the user, thus forgetting the token.
      *
-     * @param  bool  $forceForever
      * @return void
      */
-    public function logout($forceForever = false)
+    public function logout()
     {
-        $this->requireToken()->invalidate($forceForever);
-
         $this->user = null;
         $this->jwt->unsetToken();
     }
@@ -158,24 +199,12 @@ class JWTGuard implements Guard
     /**
      * Refresh the token.
      *
-     * @param  bool  $forceForever
      * @param  bool  $resetClaims
      * @return string
      */
-    public function refresh($forceForever = false, $resetClaims = false)
+    public function refresh($resetClaims = false)
     {
-        return $this->requireToken()->refresh($forceForever, $resetClaims);
-    }
-
-    /**
-     * Invalidate the token.
-     *
-     * @param  bool  $forceForever
-     * @return \Tymon\JWTAuth\JWT
-     */
-    public function invalidate($forceForever = false)
-    {
-        return $this->requireToken()->invalidate($forceForever);
+        return $this->requireToken()->refresh($resetClaims);
     }
 
     /**
