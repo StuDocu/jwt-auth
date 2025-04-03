@@ -207,8 +207,6 @@ abstract class AbstractServiceProvider extends ServiceProvider
                 $app['request'],
                 [
                     new AuthHeaders,
-                    new QueryString,
-                    new InputSource,
                 ]
             );
 
