@@ -173,7 +173,7 @@ class Lcobucci extends Provider implements JWT
             )
             : Configuration::forSymmetricSigner($this->signer, $this->getSigningKey());
 
-        if (! $this->usingV4()) {
+        if (method_exists($config, 'withValidationConstraints')) {
             return $config->withValidationConstraints(
                 new SignedWith($this->signer, $this->getVerificationKey())
             );
