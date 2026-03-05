@@ -102,6 +102,66 @@ class LcobucciTest extends AbstractTestCase
     }
 
     /** @test */
+    public function it_can_encode_and_decode_a_token_with_nbf_jti_and_aud_claims()
+    {
+        $payload = [
+            'sub' => 1,
+            'exp' => $exp = $this->testNowTimestamp + 3600,
+            'iat' => $iat = $this->testNowTimestamp,
+            'nbf' => $nbf = $this->testNowTimestamp,
+            'jti' => $jti = 'unique-token-id',
+            'iss' => '/foo',
+            'aud' => $aud = 'my-audience',
+            'custom_claim' => 'foobar',
+        ];
+
+        $provider = $this->getProvider(Str::random(64), Provider::ALGO_HS256);
+
+        $token = $provider->encode($payload);
+        $claims = $provider->decode($token);
+
+        $this->assertEquals('1', $claims['sub']);
+        $this->assertEquals('/foo', $claims['iss']);
+        $this->assertEquals('foobar', $claims['custom_claim']);
+        $this->assertEquals($exp, $claims['exp']);
+        $this->assertEquals($iat, $claims['iat']);
+        $this->assertEquals($nbf, $claims['nbf']);
+        $this->assertEquals($jti, $claims['jti']);
+        $this->assertEquals([$aud], $claims['aud']);
+    }
+
+    /** @test */
+    public function it_can_encode_and_decode_a_token_using_an_asymmetric_ES256_key()
+    {
+        $payload = [
+            'sub' => 1,
+            'exp' => $exp = $this->testNowTimestamp + 3600,
+            'iat' => $iat = $this->testNowTimestamp,
+            'iss' => '/foo',
+            'custom_claim' => 'foobar',
+        ];
+
+        $provider = $this->getProvider(
+            Str::random(64),
+            Provider::ALGO_ES256,
+            ['private' => $this->getDummyEcPrivateKey(), 'public' => $this->getDummyEcPublicKey()]
+        );
+
+        $token = $provider->encode($payload);
+
+        $header = json_decode(base64_decode(head(explode('.', $token))), true);
+        $this->assertEquals(Provider::ALGO_ES256, $header['alg']);
+
+        $claims = $provider->decode($token);
+
+        $this->assertEquals('1', $claims['sub']);
+        $this->assertEquals('/foo', $claims['iss']);
+        $this->assertEquals('foobar', $claims['custom_claim']);
+        $this->assertEquals($exp, $claims['exp']);
+        $this->assertEquals($iat, $claims['iat']);
+    }
+
+    /** @test */
     public function it_should_throw_an_invalid_exception_when_the_payload_could_not_be_encoded()
     {
         $this->expectException(JWTException::class);
@@ -240,5 +300,15 @@ class LcobucciTest extends AbstractTestCase
     public function getDummyPublicKey()
     {
         return file_get_contents(__DIR__.'/../Keys/id_rsa.pub');
+    }
+
+    public function getDummyEcPrivateKey()
+    {
+        return file_get_contents(__DIR__.'/../Keys/id_ecdsa');
+    }
+
+    public function getDummyEcPublicKey()
+    {
+        return file_get_contents(__DIR__.'/../Keys/id_ecdsa.pub');
     }
 }
