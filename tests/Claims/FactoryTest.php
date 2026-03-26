@@ -48,13 +48,18 @@ class FactoryTest extends AbstractTestCase
     public function it_should_set_the_ttl()
     {
         $this->assertInstanceOf(Factory::class, $this->factory->setTTL(30));
+        $this->assertSame(30, $this->factory->getTTL());
+        $this->assertInstanceOf(Factory::class, $this->factory->setTTL('60'));
+        $this->assertSame(60, $this->factory->getTTL());
     }
 
     /** @test */
-    public function it_should_get_the_ttl()
+    public function it_should_set_the_leeway()
     {
-        $this->factory->setTTL($ttl = 30);
-        $this->assertSame($ttl, $this->factory->getTTL());
+        $this->assertInstanceOf(Factory::class, $this->factory->setLeeway(30));
+        $this->assertSame(30, $this->factory->getLeeway());
+        $this->assertInstanceOf(Factory::class, $this->factory->setLeeway('60'));
+        $this->assertSame(60, $this->factory->getLeeway());
     }
 
     /** @test */
